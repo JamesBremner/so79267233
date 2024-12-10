@@ -1,6 +1,6 @@
 # Optimizing kid's satisfaction
 
-This application tackles the impossible task of satifying a bunch of kids by giving them candy.
+This application tackles the impossible task of satisfying a bunch of kids by giving them candy.
 
 # Problem Specification
 
