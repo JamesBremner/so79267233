@@ -16,6 +16,8 @@ A satisfaction threshold c[j]: the minimum total satisfaction needed for a kid j
 
 Special "universal candies" that contribute 1 unit of satisfaction to any kid and are theoretically unlimited.
 
+[Input file format](https://github.com/JamesBremner/so79267233/wiki/Input-file-format)
+
 ## Objective:
 
 Satisfy every kid's threshold c[j] by distributing candies (and special candies if needed).
