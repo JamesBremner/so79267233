@@ -1,11 +1,6 @@
 #source file search paths
 VPATH = ./src 
 
-	# compiler include search paths
-INCS = -I./include \
-	-I../windex/include \
-	-I../raven-set \
-
 LIBS = \
 	-lgdiplus -lgdi32 -lcomdlg32 -lstdc++fs \
 	#-mwindows
