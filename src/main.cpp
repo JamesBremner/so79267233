@@ -12,11 +12,11 @@ struct sKid
     int satisLeft;           // minimum total satisfaction, remaining
     int universal;           // universal award
 
-    sKid();                                 // CTOR
-    void award(int candy, int amount);      // award candy in a specified amount
-    int awardUniversal();                   // award enough universal to satisfy
-    bool isSatisfied() const;               // true if satisfied
-    void display(int index) const;          // display final result
+    sKid();                            // CTOR
+    void award(int candy, int amount); // award candy in a specified amount
+    int awardUniversal();              // award enough universal to satisfy
+    bool isSatisfied() const;          // true if satisfied
+    void display(int index) const;     // display final result
 };
 
 struct sAwardValue
@@ -51,9 +51,10 @@ private:
         const std::vector<int> vKidMin);
     void sortAwardValues();
     void awardFavorite();
-    void awardSeconds();
     void awardUniversal();
     void award(int kid, int candy, int amount);
+    bool allSatisfied();
+    bool allgone();
 };
 
 sKid::sKid()
@@ -149,7 +150,6 @@ void sProblem::solve()
 
     sortAwardValues();
     awardFavorite();
-    awardSeconds();
     awardUniversal();
 }
 
@@ -170,35 +170,51 @@ void sProblem::sortAwardValues()
 
 void sProblem::awardFavorite()
 {
-    for (auto &value : myValue)
+    while (true)
     {
-        int remaingCandy = myCandy[value.myCandy];
-        int dissatisfied = myKids[value.myKid].satisLeft;
-        if (remaingCandy > 0)
+        for (auto &value : myValue)
         {
-            if (dissatisfied > 0)
+            int remaingCandy = myCandy[value.myCandy];
+            int dissatisfied = myKids[value.myKid].satisLeft;
+            if (remaingCandy > 0)
             {
-                int amount = remaingCandy;
-                if (amount > dissatisfied)
-                    amount = dissatisfied;
-                award(value.myKid, value.myCandy, amount);
+                if (dissatisfied > 0)
+                {
+                    int amount = remaingCandy;
+                    if (amount > dissatisfied)
+                        amount = dissatisfied;
+                    award(value.myKid, value.myCandy, amount);
+                }
             }
         }
+        if (allSatisfied())
+            break;
+        if (allgone())
+            break;
     }
 }
-void sProblem::awardSeconds()
-{
-    //  for( auto& value : myValue )
-    //  {
 
-    //  }
-}
 
 void sProblem::awardUniversal()
 {
     myTotalUniversal = 0;
     for (auto &kid : myKids)
         myTotalUniversal += kid.awardUniversal();
+}
+
+bool sProblem::allSatisfied()
+{
+    for (auto &kid : myKids)
+        if (!kid.isSatisfied())
+            return false;
+    return true;
+}
+bool sProblem::allgone()
+{
+    for (int candy : myCandy)
+        if (candy > 0)
+            return false;
+    return true;
 }
 
 void sKid::display(int index) const
