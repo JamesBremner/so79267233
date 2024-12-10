@@ -127,25 +127,21 @@ void sProblem::award(int kid, int candy, int amount)
 void sProblem::solve()
 {
     /*
-     - Sort q[i][j] into decreasing value
-     - LOOP i,j over sorted q[i][j]
-        - Award s[j] of i to kid j up the the lessor of remaining i or c[j]
+ - Sort q[i][j] into decreasing value
+ - LOOP until all satisfied or no more candies
+    - LOOP i,j over sorted q[i][j]
+       - Award s[j] of i to kid j up the the lessor of remaining i or c[j]
         - IF i exhausted
-           BREAK out of LOOP i,j
-     - ENDLOOP i,j
-     - LOOP over J
-        - IF J has NOT reached c[j]
-           - LOOP i over sorted q[i][j]
-              - IF q[i][j] > 1
-                 - Award s[j] of i to kid j up the the lessor of remaining i or c[j]
-              - IF c[j] reached
-                  - BREAK out of LOOP i
-            - IF c[j] reached
-               - Break out of LOOP J
-     - LOOP over J
-        - IF c[j] not reached
-             - AWARD J enough "universal" to reach c[J]
-     - STOP
+           - BREAK out of LOOP i,j
+    - ENDLOOP i,j
+    - IF all satisfied or no more candies
+        - BREAK out of loop
+ - ENDLOOP until all satisfied or no more candies
+
+ - LOOP over J
+    - IF c[j] not reached
+         - AWARD J enough "universal" to reach c[J]
+ - STOP
     */
 
     sortAwardValues();
