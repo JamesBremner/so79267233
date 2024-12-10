@@ -12,17 +12,11 @@ struct sKid
     int satisLeft;           // minimum total satisfaction, remaining
     int universal;           // universal award
 
-    sKid()
-        : universal(0)
-    {
-    }
-    void award(int candy, int amount);
-    int awardUniversal();
-    bool isSatisfied() const
-    {
-        return satisLeft <= 0;
-    }
-    void display(int index) const;
+    sKid();                                 // CTOR
+    void award(int candy, int amount);      // award candy in a specified amount
+    int awardUniversal();                   // award enough universal to satisfy
+    bool isSatisfied() const;               // true if satisfied
+    void display(int index) const;          // display final result
 };
 
 struct sAwardValue
@@ -62,6 +56,15 @@ private:
     void award(int kid, int candy, int amount);
 };
 
+sKid::sKid()
+    : universal(0)
+{
+}
+
+bool sKid::isSatisfied() const
+{
+    return satisLeft <= 0;
+}
 void sKid::award(int candy, int amount)
 {
     vAward[candy] += amount;
@@ -222,7 +225,7 @@ void sProblem::display()
         myKids[kid].display(kid);
     }
     std::cout << "Total Universal candies awarded "
-        << myTotalUniversal << "\n";
+              << myTotalUniversal << "\n";
 }
 
 main()
