@@ -48,6 +48,7 @@ struct sProblem
     void read(const std::string fname);
 
     void solve();
+    void milp();
 
     void display();
 
@@ -62,6 +63,9 @@ private:
     void award(int kid, int candy, int amount);
     bool allSatisfied();
     bool allgone();
+
+    // generate MILP objective and constraints
+    void milpDesign();
 };
 
 sKid::sKid()
@@ -227,6 +231,70 @@ bool sProblem::allgone()
     return true;
 }
 
+void sProblem::milp()
+{
+    milpDesign();
+}
+
+void sProblem::milpDesign()
+{
+    std::vector<std::string> vsobj;
+    std::stringstream ss;
+    ss << "Maximize ";
+    for (int kid = 0; kid < myKids.size(); kid++)
+    {
+        auto sk = std::to_string(kid);
+        for (int candy = 0; candy < myCandy.size(); candy++)
+        {
+            auto sc = std::to_string(candy);
+            if (!(kid == 0 && candy == 0))
+                ss << " + ";
+            ss << "f" << sc << sk
+               << " * "
+               << std::to_string(myKids[kid].vSatis[candy]);
+        }
+    }
+    vsobj.push_back(ss.str());
+    ss.str("");
+
+    // constraints for candy quantities
+    for (int candy = 0; candy < myCandy.size(); candy++)
+    {
+        auto sc = std::to_string(candy);
+        for (int kid = 0; kid < myKids.size(); kid++)
+        {
+            auto sk = std::to_string(kid);
+            if (kid != 0)
+                ss << " + ";
+            ss << "f" << sc << sk;
+        }
+        ss << " <= " << std::to_string(myCandy[candy]);
+    
+    vsobj.push_back(ss.str());
+    ss.str("");
+    }
+
+    for (int kid = 0; kid < myKids.size(); kid++)
+    {
+        auto sk = std::to_string(kid);
+        for (int candy = 0; candy < myCandy.size(); candy++)
+        {
+            if (candy != 0)
+                ss << " + ";
+            auto sc = std::to_string(candy);
+            ss << "f" << sc << sk
+               << " * " << std::to_string(myKids[kid].vSatis[candy]);
+        }
+        ss << " <= " << std::to_string(myKids[kid].satisLeft);
+    
+    vsobj.push_back(ss.str());
+    ss.str("");
+    }
+
+    for (auto &s : vsobj)
+        std::cout << s << "\n\n";
+}
+
 void sKid::display(int index) const
 {
     std::cout << "Kid " << index;
@@ -258,6 +326,9 @@ main()
 {
     sProblem theProblem;
     theProblem.genTID1();
+
+    theProblem.milp();
+
     theProblem.solve();
     theProblem.display();
     return 0;
