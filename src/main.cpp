@@ -40,6 +40,13 @@ struct sProblem
     // generate example problem posted to https://stackoverflow.com/q/79267233/16582
     void gen1();
 
+    // generate TID1 problem
+    // https://github.com/JamesBremner/so79267233/issues/1
+    void genTID1();
+
+    // read file
+    void read(const std::string fname);
+
     void solve();
 
     void display();
@@ -99,6 +106,14 @@ c = [15, 10]
     std::vector<std::vector<int>> vKidSatis{{2, 3, 1}, {1, 2, 3}};
     std::vector<int> vKidMin{15, 10};
 
+    gen(quantity, vKidSatis, vKidMin);
+}
+
+void sProblem::genTID1()
+{
+    std::vector<int> quantity{1, 1};
+    std::vector<std::vector<int>> vKidSatis{{15, 15}, {10, 1}};
+    std::vector<int> vKidMin{15, 10};
     gen(quantity, vKidSatis, vKidMin);
 }
 void sProblem::gen(
@@ -190,7 +205,6 @@ void sProblem::awardFavorite()
     }
 }
 
-
 void sProblem::awardUniversal()
 {
     myTotalUniversal = 0;
@@ -243,7 +257,7 @@ void sProblem::display()
 main()
 {
     sProblem theProblem;
-    theProblem.gen1();
+    theProblem.genTID1();
     theProblem.solve();
     theProblem.display();
     return 0;
