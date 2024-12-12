@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 
+// https://github.com/JamesBremner/SolutionSpaceExplorer
 #include "cSolutionSpaceExplorer.h"
 
 struct sKid
@@ -313,7 +314,13 @@ void sProblem::milpDesign()
 
 void sProblem::ssex_variables()
 {
-    std::vector<std::string> ret;
+    // The variable values can be altered
+    // to maximise the objective function
+    // within the constrints
+
+    std::vector<std::string> vv;        // vector of variable names
+
+    int max = 0;                            // maximum value of any variable
 
     for (int candy = 0; candy < myCandy.size(); candy++)
     {
@@ -325,10 +332,17 @@ void sProblem::ssex_variables()
             std::stringstream ss;
             ss << "f" << sc << sk;
 
-            ret.push_back(ss.str());
+            vv.push_back(ss.str());
         }
+
+        if( myCandy[candy] > max )
+            max = myCandy[candy];
     }
-    ssex.variables(ret, 10);
+
+    // dpecify variable names
+    ssex.variables(
+        vv,             // vector of variable names
+        max);           // maximum amount of any candy
 }
 void sProblem::ssex_consts()
 {
@@ -396,6 +410,9 @@ void sProblem::ssex_Solver()
     ssex.parse();
 
     // find optimum assignment using exhaustive search
+    // TODO: this is sufficient for small problems,
+    // large problems will need the integer linear programming algorithm
+
     ssex.search(1);
 }
 
@@ -541,8 +558,8 @@ void sProblem::display()
 main()
 {
     sProblem theProblem;
-    //theProblem.gen1();
-     theProblem.genTID1();
+    theProblem.gen1();
+     //theProblem.genTID1();
 
     theProblem.milp();
     theProblem.solutionSpaceExplorer();
