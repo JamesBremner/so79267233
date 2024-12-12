@@ -55,7 +55,7 @@ struct sProblem
 
     void solve();
     void milp();
-    void SolutionSpaceExplorerGenerator();
+    void solutionSpaceExplorer();
 
     void display();
 
@@ -73,11 +73,15 @@ private:
 
     // generate MILP objective and constraints
     void milpDesign();
+
+    void ssex_Generator();
+    void ssex_Solver();
+    void ssex_Reporter();
     void ssex_CandyConstraints();
     void ssex_SatisfyConstraints();
     void ssex_variables();
     void ssex_consts();
-    void ssex_objective();
+    void ssex_Objective();
 };
 
 sKid::sKid()
@@ -343,7 +347,7 @@ void sProblem::ssex_consts()
     }
 }
 
-void sProblem::ssex_objective()
+void sProblem::ssex_Objective()
 {
     std::stringstream ss;
     for (int candy = 0; candy < myCandy.size(); candy++)
@@ -356,45 +360,91 @@ void sProblem::ssex_objective()
                 ss << " + ";
             ss << "f" << sc << sk
                << " * s" << sc << sk;
-           
         }
     }
 
     ssex.objective(ss.str());
 }
 
-void sProblem::SolutionSpaceExplorerGenerator()
+void sProblem::solutionSpaceExplorer()
 {
-    try {
-    ssex_variables();
-    ssex_consts();
-    ssex_objective();
-    ssex_CandyConstraints();
-    ssex_SatisfyConstraints();
-
-        // parse the input
-    ssex.parse();
-
-    // find optimum assignment using exhaustive search
-    ssex.search(1);
-
-    // get optimal solution
-    double ov = ssex.objective();
-
+    try
+    {
+        ssex_Generator();
+        ssex_Solver();
+        ssex_Reporter();
     }
-    catch( std::runtime_error& e )
+    catch (std::runtime_error &e)
     {
         std::cout << "ssex threw: " << e.what() << "\n";
         exit(1);
     }
 }
 
+void sProblem::ssex_Generator()
+{
+    ssex_variables();
+    ssex_consts();
+    ssex_Objective();
+    ssex_CandyConstraints();
+    ssex_SatisfyConstraints();
+}
+
+void sProblem::ssex_Solver()
+{
+    // parse the input
+    ssex.parse();
+
+    // find optimum assignment using exhaustive search
+    ssex.search(1);
+}
+
+void sProblem::ssex_Reporter()
+{
+    std::vector<int> vs(myKids.size(), 0);
+    std::vector<int> vu(myKids.size(), 0);
+    std::vector<int> vc(myCandy.size(), 0);
+    int utotal = 0;
+    for (auto &ov : ssex.optVarNameValue())
+    {
+        //std::cout << ov.first << " " << ov.second << "\n";
+        int candy, kid;
+        candy = atoi(ov.first.substr(1, 1).c_str());
+        kid = atoi(ov.first.substr(2, 1).c_str());
+
+        std::cout 
+            << "Kid " << kid 
+            << " gets " << ov.second 
+            << " of candy " << candy
+            << "\n";
+
+        vs[kid] += myKids[kid].vSatis[candy] * ov.second;
+        vc[candy] += ov.second;
+    }
+    std::cout << "kid's satifaction\n";
+    for (int s : vs)
+        std::cout << s << " ";
+    std::cout << "\nCandy amounts\n";
+    for (int c : vc)
+        std::cout << c << " ";
+    std::cout << "\n";
+
+    // complete every child's satisfaction by awarding universal candies
+    for( int kid = 0; kid < myKids.size(); kid++ )
+    {
+        if( vs[kid] < myKids[kid].satisLeft ) {
+            vu[kid] = myKids[kid].satisLeft - vs[kid];
+            utotal += vu[kid];
+        }
+    }
+    std::cout << "Total universal " << utotal << "\n";
+}
+
 void sProblem::ssex_CandyConstraints()
 {
-    std::stringstream ss;
     for (int candy = 0; candy < myCandy.size(); candy++)
     {
-        //ss << "(\"";
+        std::stringstream ss;
         auto sc = std::to_string(candy);
         for (int kid = 0; kid < myKids.size(); kid++)
         {
@@ -405,9 +455,8 @@ void sProblem::ssex_CandyConstraints()
             ss << "f" << sc << sk;
         }
         ss << " <= " << std::to_string(myCandy[candy]);
-           //<< " \"";
 
-        ssex.constraint(ss.str() );
+        ssex.constraint(ss.str());
     }
 }
 
@@ -420,7 +469,7 @@ void sProblem::ssex_SatisfyConstraints()
     and limit to the total satisfaction obtainable by each kid
     */
 
-   std::cout << "Satisfaction constraints\n";
+    std::cout << "Satisfaction constraints\n";
 
     // loop over the kids
     for (int kid = 0; kid < myKids.size(); kid++)
@@ -459,7 +508,7 @@ void sProblem::ssex_SatisfyConstraints()
         // display constraint
         std::cout << ss << "\n";
 
-    }   // end loop over each child
+    } // end loop over each child
 }
 
 void sKid::display(int index) const
@@ -492,13 +541,13 @@ void sProblem::display()
 main()
 {
     sProblem theProblem;
-    theProblem.gen1();
-    //theProblem.genTID1();
+    //theProblem.gen1();
+     theProblem.genTID1();
 
     theProblem.milp();
-    theProblem.SolutionSpaceExplorerGenerator();
+    theProblem.solutionSpaceExplorer();
 
-    theProblem.solve();
-    theProblem.display();
+    // theProblem.solve();
+    // theProblem.display();
     return 0;
 }
