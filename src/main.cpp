@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "cSolutionSpaceExplorer.h"
+
 struct sKid
 {
     std::vector<int> vSatis; // satisfaction derived from each candy type
@@ -36,6 +38,10 @@ struct sProblem
     std::vector<int> myCandy; // quantity of available candy
     std::vector<sAwardValue> myValue;
     int myTotalUniversal;
+    std::vector<std::string> myMilpDesign;
+
+    // the solution explorer
+    cSolutionSpaceExplorer ssex;
 
     // generate example problem posted to https://stackoverflow.com/q/79267233/16582
     void gen1();
@@ -49,6 +55,7 @@ struct sProblem
 
     void solve();
     void milp();
+    void SolutionSpaceExplorerGenerator();
 
     void display();
 
@@ -66,6 +73,11 @@ private:
 
     // generate MILP objective and constraints
     void milpDesign();
+    void ssex_CandyConstraints();
+    void ssex_SatisfyConstraints();
+    void ssex_variables();
+    void ssex_consts();
+    void ssex_objective();
 };
 
 sKid::sKid()
@@ -238,7 +250,7 @@ void sProblem::milp()
 
 void sProblem::milpDesign()
 {
-    std::vector<std::string> vsobj;
+
     std::stringstream ss;
     ss << "Maximize ";
     for (int kid = 0; kid < myKids.size(); kid++)
@@ -254,7 +266,7 @@ void sProblem::milpDesign()
                << std::to_string(myKids[kid].vSatis[candy]);
         }
     }
-    vsobj.push_back(ss.str());
+    myMilpDesign.push_back(ss.str());
     ss.str("");
 
     // constraints for candy quantities
@@ -269,9 +281,9 @@ void sProblem::milpDesign()
             ss << "f" << sc << sk;
         }
         ss << " <= " << std::to_string(myCandy[candy]);
-    
-    vsobj.push_back(ss.str());
-    ss.str("");
+
+        myMilpDesign.push_back(ss.str());
+        ss.str("");
     }
 
     for (int kid = 0; kid < myKids.size(); kid++)
@@ -286,13 +298,168 @@ void sProblem::milpDesign()
                << " * " << std::to_string(myKids[kid].vSatis[candy]);
         }
         ss << " <= " << std::to_string(myKids[kid].satisLeft);
-    
-    vsobj.push_back(ss.str());
-    ss.str("");
+
+        myMilpDesign.push_back(ss.str());
+        ss.str("");
     }
 
-    for (auto &s : vsobj)
+    for (auto &s : myMilpDesign)
         std::cout << s << "\n\n";
+}
+
+void sProblem::ssex_variables()
+{
+    std::vector<std::string> ret;
+
+    for (int candy = 0; candy < myCandy.size(); candy++)
+    {
+        auto sc = std::to_string(candy);
+        for (int kid = 0; kid < myKids.size(); kid++)
+        {
+            auto sk = std::to_string(kid);
+
+            std::stringstream ss;
+            ss << "f" << sc << sk;
+
+            ret.push_back(ss.str());
+        }
+    }
+    ssex.variables(ret, 10);
+}
+void sProblem::ssex_consts()
+{
+    for (int candy = 0; candy < myCandy.size(); candy++)
+    {
+        auto sc = std::to_string(candy);
+        for (int kid = 0; kid < myKids.size(); kid++)
+        {
+            auto sk = std::to_string(kid);
+
+            std::stringstream ss;
+            ss << "s" << sc << sk;
+
+            ssex.consts(ss.str(), myKids[kid].vSatis[candy]);
+        }
+    }
+}
+
+void sProblem::ssex_objective()
+{
+    std::stringstream ss;
+    for (int candy = 0; candy < myCandy.size(); candy++)
+    {
+        auto sc = std::to_string(candy);
+        for (int kid = 0; kid < myKids.size(); kid++)
+        {
+            auto sk = std::to_string(kid);
+            if (!(candy == 0 && kid == 0))
+                ss << " + ";
+            ss << "f" << sc << sk
+               << " * s" << sc << sk;
+           
+        }
+    }
+
+    ssex.objective(ss.str());
+}
+
+void sProblem::SolutionSpaceExplorerGenerator()
+{
+    try {
+    ssex_variables();
+    ssex_consts();
+    ssex_objective();
+    ssex_CandyConstraints();
+    ssex_SatisfyConstraints();
+
+        // parse the input
+    ssex.parse();
+
+    // find optimum assignment using exhaustive search
+    ssex.search(1);
+
+    // get optimal solution
+    double ov = ssex.objective();
+
+    }
+    catch( std::runtime_error& e )
+    {
+        std::cout << "ssex threw: " << e.what() << "\n";
+        exit(1);
+    }
+}
+
+void sProblem::ssex_CandyConstraints()
+{
+    std::stringstream ss;
+    for (int candy = 0; candy < myCandy.size(); candy++)
+    {
+        //ss << "(\"";
+        auto sc = std::to_string(candy);
+        for (int kid = 0; kid < myKids.size(); kid++)
+        {
+            auto sk = std::to_string(kid);
+
+            if (kid != 0)
+                ss << " + ";
+            ss << "f" << sc << sk;
+        }
+        ss << " <= " << std::to_string(myCandy[candy]);
+           //<< " \"";
+
+        ssex.constraint(ss.str() );
+    }
+}
+
+void sProblem::ssex_SatisfyConstraints()
+{
+    /* There is no need to gave any child more candy
+    than will give it the maximum possible satisfaction.
+
+    Sum the product of each candy type anount time the satisfaction per candy
+    and limit to the total satisfaction obtainable by each kid
+    */
+
+   std::cout << "Satisfaction constraints\n";
+
+    // loop over the kids
+    for (int kid = 0; kid < myKids.size(); kid++)
+    {
+        // construct string to hold the constraint
+        std::string ss;
+
+        auto sk = std::to_string(kid);
+
+        // loop over candy types
+        for (int candy = 0; candy < myCandy.size(); candy++)
+        {
+            auto sc = std::to_string(candy);
+
+            // add to sum of previous products
+            if (candy != 0)
+                ss += " + ";
+
+            // amount of candy to child
+            ss += "f" + sc + sk;
+
+            // multiply amount by satisfaction
+            ss += " * ";
+
+            // satisfaction per candy
+            ss += "s" + sc + sk;
+
+        } // end loop over each candy type
+
+        // maximum satisfaction obtainable
+        ss += " <= " + std::to_string(myKids[kid].satisLeft);
+
+        // add constraint to solution explorer
+        ssex.constraint(ss);
+
+        // display constraint
+        std::cout << ss << "\n";
+
+    }   // end loop over each child
 }
 
 void sKid::display(int index) const
@@ -325,9 +492,11 @@ void sProblem::display()
 main()
 {
     sProblem theProblem;
-    theProblem.genTID1();
+    theProblem.gen1();
+    //theProblem.genTID1();
 
     theProblem.milp();
+    theProblem.SolutionSpaceExplorerGenerator();
 
     theProblem.solve();
     theProblem.display();
