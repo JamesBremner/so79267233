@@ -1,3 +1,11 @@
+namespace raven
+{
+    namespace graph
+    {
+        struct sGraphData;
+    }
+}
+
 struct sKid
 {
     std::vector<int> vSatis; // satisfaction derived from each candy type
@@ -44,6 +52,7 @@ struct sProblem
     void solve();
     void milp();
     void solutionSpaceExplorer();
+    void flow();
 
     void display();
 
@@ -70,4 +79,11 @@ private:
     void ssex_variables();
     void ssex_consts();
     void ssex_Objective();
+
+    void flow_makeGraph();
+    void flow_report();
+    double
+    flow_FFObjective(
+        raven::graph::sGraphData &gd,
+        std::vector<int> &vEdgeFlow);
 };

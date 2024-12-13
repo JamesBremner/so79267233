@@ -1,9 +1,10 @@
 #source file search paths
-VPATH = ./src ../SolutionSpaceExplorer/src ../raven-set
+VPATH = ./src ../SolutionSpaceExplorer/src ../PathFinder/src ../raven-set
 
 	# compiler include search paths
 INCS = 	-I../SolutionSpaceExplorer/src \
 	-I../raven-set \
+	-I../PathFinder/src \
 	-I../../code_ext/boost/boost1_78 \
 
 LIBS = \
@@ -22,6 +23,10 @@ CCflags = -std=c++17 $(OPT) -D_mingw_
 OBJ_starter = \
 	$(ODIR)/main.o \
 	$(ODIR)/solutionSpaceExplorer.o \
+	$(ODIR)/flow.o \
+	$(ODIR)/cSolutionSpaceExplorer.o \
+	$(ODIR)/cGraph.o \
+	$(ODIR)/GraphTheory.o \
 	$(ODIR)/cSolutionSpaceExplorer.o \
 	$(ODIR)/cRunWatch.o \
 

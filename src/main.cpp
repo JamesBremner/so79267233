@@ -265,13 +265,15 @@ void sProblem::display()
 main()
 {
     sProblem theProblem;
+    
     theProblem.gen1();
      //theProblem.genTID1();
 
-    theProblem.milp();
-    theProblem.solutionSpaceExplorer();
-
+    // theProblem.milp();
+    // theProblem.solutionSpaceExplorer();
     // theProblem.solve();
     // theProblem.display();
+    theProblem.flow();
+
     return 0;
 }
